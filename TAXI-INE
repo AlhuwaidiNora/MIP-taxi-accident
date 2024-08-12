@@ -1,0 +1,80 @@
+import pandas as pd
+
+# Part 1: Study Case
+
+# In a city with one hundred taxis, 1 is blue and 99 are green.
+# A witness observes a hit-and-run by a taxi at night and recalls that the taxi was blue.
+# The driver proclaims his innocence and hires you to defend him in court.
+# The data suggests that the witness sees blue cars as blue 99% of the time and green cars as blue 2% of the time.
+
+# A) What type of probability will you calculate to defend him?
+# To defend the driver, you should calculate the posterior probability P(T_b | W_b), which is the probability that the taxi is blue given that the witness saw a blue taxi.
+
+# B) Using the following events
+# W_b: The witness sees a blue taxi
+# W_g: The witness sees a green taxi
+# T_b: The taxi is blue
+# T_g: The taxi is green
+# You can use Bayes' theorem to calculate P(T_b | W_b):
+# P(T_b | W_b) = (P(W_b | T_b) * P(T_b)) / P(W_b)
+
+# Given probabilities
+P_Wb_given_Tb = 0.99  # P(W_b | T_b)
+P_Tb = 1 / 100        # P(T_b)
+
+# Probability of a taxi being green
+P_Tg = 99 / 100       # P(T_g)
+
+# Probability of the witness seeing a blue taxi given the taxi is green
+P_Wb_given_Tg = 0.02  # P(W_b | T_g)
+
+# C) Calculate P(W_b) using the Law of Total Probability
+P_Wb = (P_Wb_given_Tb * P_Tb) + (P_Wb_given_Tg * P_Tg)
+
+# D) Now, what is the result of P(T_b | W_b)?
+P_Tb_given_Wb = (P_Wb_given_Tb * P_Tb) / P_Wb
+
+# E) Verdict time. Is the car more likely to be blue or green?
+# To determine if the taxi is more likely to be blue or green, compare P(T_b | W_b) to 1 - P(T_b | W_b).
+
+# Part 2: Taxi Data Analysis
+
+# Importing and preparing the dataset
+# Execute this code to extract (unzip) the ZIP file
+!tar -xvf data/taxi.zip taxi.csv
+!mv taxi.csv data/
+taxi_df = pd.read_csv('data/taxi.csv')
+taxi_df.head()
+
+# A) Drop the following columns:
+columns_to_drop = ['pickup_census_tract', 'dropoff_census_tract', 'pickup_community_area', 'dropoff_community_area', 'tolls', 'pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude']
+taxi_df = taxi_df.drop(columns=columns_to_drop)
+
+# B) Keep just the first 100 rows.
+taxi_df = taxi_df.head(100)
+
+# C) We don't have information about taxi colors, but we know green taxis don’t accept cash if the fare is higher than 40.
+# We know a passenger spent more than $40 and paid by cash, so that trip belongs to the blue taxi. Get that trip record.
+blue_taxi_trips = taxi_df[(taxi_df['fare'] > 40) & (taxi_df['payment_type'] == 'Cash')]
+
+# D) What is the probability to have taken the blue taxi if the trip lasted more than 500 seconds?
+# Assuming 'fare' is the duration, you might need to adjust based on actual data columns
+prob_blue_given_long_trip = len(taxi_df[(taxi_df['fare'] > 500) & (taxi_df['payment_type'] == 'Cash')]) / len(taxi_df[taxi_df['fare'] > 500])
+
+# E) What is the probability to have taken the green taxi if the trip lasted more than 500 seconds?
+# Assuming 'fare' is the duration, you might need to adjust based on actual data columns
+prob_green_given_long_trip = len(taxi_df[(taxi_df['fare'] > 500) & (taxi_df['payment_type'] == 'Cash')]) / len(taxi_df[taxi_df['fare'] > 500])
+
+# F) What is the probability to have paid in cash given that you took the green taxi?
+prob_cash_given_green_taxi = len(taxi_df[(taxi_df['payment_type'] == 'Cash') & (taxi_df['fare'] > 40)]) / len(taxi_df[taxi_df['fare'] > 40])
+
+# G) For the last task, consider the following events:
+# A = The taxi chosen paid by cash
+# B = The taxi chosen had the trip last more than 500 seconds
+# C = The taxi chosen had a total trip fare of $40
+
+# G.1) Are A and B mutually exclusive?
+# Events A (paid by cash) and B (trip lasted more than 500 seconds) are not mutually exclusive. A taxi can both pay by cash and have a trip longer than 500 seconds.
+
+# G.2) Are A and C mutually exclusive?
+# Events A (paid by cash) and C (trip fare equals $40) are mutually exclusive since green taxis do not accept cash for fares above $40.
